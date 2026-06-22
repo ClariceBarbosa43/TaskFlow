@@ -5,125 +5,170 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
+  FlatList,
+  ToastAndroid,
+  Alert,
+  Platform,
 } from 'react-native';
 
 import { MaterialIcons } from '@expo/vector-icons';
+import { supabase } from '../../lib/supabase';
+
+type Task = {
+  id: string;
+  title: string;
+  completed: boolean;
+  created_at?: string;
+};
 
 export default function App() {
-  const [task, setTask] = useState('');
-
-  const [tasks, setTasks] = useState([
-    {
-      id: '1',
-      title: 'Study React Native',
-      completed: false,
-    },
-    {
-      id: '2',
-      title: 'Finish Assignment',
-      completed: false,
-    },
-  ]);
+  const [task, setTask] = useState<string>('');
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
-    console.log('Component mounted!');
+    loadTasks();
   }, []);
 
-  function handleAddTask() {
-    if (task.trim() === '') return;
+  function showToast(message: string) {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(message, ToastAndroid.SHORT);
+    } else {
+      Alert.alert(message);
+    }
+  }
 
-    setTasks([
-      ...tasks,
+  async function loadTasks() {
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      showToast('Failed to load tasks');
+      console.log(error.message);
+      return;
+    }
+
+    setTasks((data as Task[]) || []);
+  }
+
+  async function addTask() {
+    if (!task.trim()) {
+      showToast('Please enter a task');
+      return;
+    }
+
+    const { error } = await supabase.from('tasks').insert([
       {
-        id: Date.now().toString(),
-        title: task,
+        title: task.trim(),
         completed: false,
       },
     ]);
 
+    if (error) {
+      showToast('Failed to add task');
+      return;
+    }
+
     setTask('');
+    showToast('Task added');
+    loadTasks();
+  }
+
+  async function toggleTask(item: Task) {
+    const { error } = await supabase
+      .from('tasks')
+      .update({ completed: !item.completed })
+      .eq('id', item.id);
+
+    if (error) {
+      showToast('Update failed');
+      return;
+    }
+
+    showToast(item.completed ? 'Marked as pending' : 'Task completed');
+    loadTasks();
+  }
+
+  async function deleteTask(id: string) {
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      showToast('Delete failed');
+      return;
+    }
+
+    showToast('Task deleted');
+    loadTasks();
   }
 
   return (
     <View style={styles.container}>
+      <Text style={styles.title}>TaskFlow</Text>
 
-      <View style={headerStyles.header}>
-        <Text style={headerStyles.title}>
-          TaskFlow
-        </Text>
-      </View>
-
+      {/* INPUT */}
       <View style={styles.inputRow}>
         <TextInput
           style={styles.input}
           placeholder="Enter Task"
-          placeholderTextColor="#888"
           value={task}
           onChangeText={setTask}
         />
 
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={handleAddTask}
-        >
-          <MaterialIcons
-            name="add"
-            size={22}
-            color="#fff"
-          />
+        <TouchableOpacity style={styles.addButton} onPress={addTask}>
+          <MaterialIcons name="add" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
 
-      {tasks.map((item) => (
-        <View
-          key={item.id}
-          style={styles.taskRow}
-        >
-          <MaterialIcons
-            name={
-              item.completed
-                ? 'check-box'
-                : 'check-box-outline-blank'
-            }
-            size={20}
-            color={
-              item.completed
-                ? '#2eba61'
-                : '#5A6472'
-            }
-          />
+      {/* LIST */}
+      <FlatList
+        data={tasks}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.taskRow}
+            onPress={() => toggleTask(item)}
+            onLongPress={() => deleteTask(item.id)}
+          >
+            <MaterialIcons
+              name={item.completed ? 'check-box' : 'check-box-outline-blank'}
+              size={22}
+              color={item.completed ? '#2eba61' : '#666'}
+            />
 
-          <Text style={styles.taskText}>
-            {item.title}
-          </Text>
-        </View>
-      ))}
-
+            <Text
+              style={[
+                styles.taskText,
+                item.completed && styles.completedText,
+              ]}
+            >
+              {item.title}
+            </Text>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={
+          <Text style={styles.emptyText}>No tasks yet</Text>
+        }
+      />
     </View>
   );
 }
 
-const headerStyles = StyleSheet.create({
-  header: {
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
     paddingTop: 50,
-    paddingBottom: 16,
-    marginBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    paddingHorizontal: 20,
+    backgroundColor: '#fff',
   },
 
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1F2A44',
-  },
-});
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
+    marginBottom: 20,
   },
 
   inputRow: {
@@ -143,7 +188,7 @@ const styles = StyleSheet.create({
   addButton: {
     backgroundColor: '#58ba2e',
     borderRadius: 8,
-    paddingHorizontal: 16,
+    paddingHorizontal: 15,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -151,13 +196,24 @@ const styles = StyleSheet.create({
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
 
   taskText: {
-    fontSize: 15,
+    fontSize: 16,
+    marginLeft: 10,
+  },
+
+  completedText: {
+    textDecorationLine: 'line-through',
+    color: 'gray',
+  },
+
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 20,
+    color: '#888',
   },
 });
