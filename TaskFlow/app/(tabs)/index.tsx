@@ -4,114 +4,120 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
+  StyleSheet
 } from 'react-native';
 
 import { MaterialIcons } from '@expo/vector-icons';
 
-export default function HomeScreen() {
+export default function App() {
   return (
-    <View style={styles.wrapper}>
+    <View style={styles.container}>
 
-      <Text style={styles.header}>TaskFlow</Text>
+      <View style={headerStyles.header}>
+        <Text style={headerStyles.title}>
+          TaskFlow
+        </Text>
+      </View>
 
-      <TextInput
-        placeholder="Enter Task"
-        placeholderTextColor="#888"
-        style={styles.taskInput}
-      />
-
-      <TouchableOpacity style={styles.addButton}>
-        <MaterialIcons
-          name="add"
-          size={22}
-          color="#fff"
+      <View style={styles.inputRow}>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter Task"
+          placeholderTextColor="#888"
         />
-        <Text style={styles.addButtonText}>Add</Text>
-      </TouchableOpacity>
 
-      <View style={styles.listContainer}>
-
-        <View style={styles.taskRow}>
+        <TouchableOpacity style={styles.addButton}>
           <MaterialIcons
-            name="check-box-outline-blank"
+            name="add"
             size={22}
-            color="#5A6472"
+            color="#fff"
           />
-          <Text style={styles.taskItem}>
-            Study React Native
-          </Text>
-        </View>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.taskRow}>
-          <MaterialIcons
-            name="check-box"
-            size={22}
-            color="#2E5BBA"
-          />
-          <Text style={styles.taskItem}>
-            Finish Assignment
-          </Text>
-        </View>
+      <View style={styles.taskRow}>
+        <MaterialIcons
+          name="check-box-outline-blank"
+          size={20}
+          color="#5A6472"
+        />
 
+        <Text style={styles.taskText}>
+          Study React Native
+        </Text>
+      </View>
+
+      <View style={styles.taskRow}>
+        <MaterialIcons
+          name="check-box-outline-blank"
+          size={20}
+          color="#5A6472"
+        />
+
+        <Text style={styles.taskText}>
+          Finish Assignment
+        </Text>
       </View>
 
     </View>
   );
 }
 
+const headerStyles = StyleSheet.create({
+  header: {
+    paddingTop: 50,
+    paddingBottom: 16,
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1F2A44',
+  },
+});
+
 const styles = StyleSheet.create({
-  wrapper: {
+  container: {
     flex: 1,
     paddingHorizontal: 20,
-    paddingTop: 60,
     backgroundColor: '#fff',
   },
 
-  header: {
-    fontSize: 30,
-    fontWeight: 'bold',
+  inputRow: {
+    flexDirection: 'row',
     marginBottom: 20,
-    textAlign: 'center',
   },
 
-  taskInput: {
+  input: {
+    flex: 1,
     borderWidth: 1,
-    borderColor: '#d3d3d3',
-    borderRadius: 10,
-    padding: 12,
-    fontSize: 16,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    padding: 10,
+    marginRight: 10,
   },
 
   addButton: {
-    flexDirection: 'row',
+    backgroundColor: '#2E5BBA',
+    borderRadius: 8,
+    paddingHorizontal: 16,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#0066CC',
-    padding: 12,
-    borderRadius: 10,
-    marginTop: 12,
-    marginBottom: 20,
-  },
-
-  addButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 16,
-  },
-
-  listContainer: {
-    gap: 12,
   },
 
   taskRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
 
-  taskItem: {
-    fontSize: 16,
+  taskText: {
+    fontSize: 15,
   },
 });
