@@ -7,24 +7,53 @@ import {
   StyleSheet,
 } from 'react-native';
 
+import { MaterialIcons } from '@expo/vector-icons';
+
 export default function HomeScreen() {
   return (
     <View style={styles.wrapper}>
-      
+
       <Text style={styles.header}>TaskFlow</Text>
 
       <TextInput
-        style={styles.taskInput}
         placeholder="Enter Task"
+        placeholderTextColor="#888"
+        style={styles.taskInput}
       />
 
       <TouchableOpacity style={styles.addButton}>
+        <MaterialIcons
+          name="add"
+          size={22}
+          color="#fff"
+        />
         <Text style={styles.addButtonText}>Add</Text>
       </TouchableOpacity>
 
       <View style={styles.listContainer}>
-        <Text style={styles.taskItem}>☐ Study React Native</Text>
-        <Text style={styles.taskItem}>☐ Finish Assignment</Text>
+
+        <View style={styles.taskRow}>
+          <MaterialIcons
+            name="check-box-outline-blank"
+            size={22}
+            color="#5A6472"
+          />
+          <Text style={styles.taskItem}>
+            Study React Native
+          </Text>
+        </View>
+
+        <View style={styles.taskRow}>
+          <MaterialIcons
+            name="check-box"
+            size={22}
+            color="#2E5BBA"
+          />
+          <Text style={styles.taskItem}>
+            Finish Assignment
+          </Text>
+        </View>
+
       </View>
 
     </View>
@@ -36,12 +65,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 20,
     paddingTop: 60,
+    backgroundColor: '#fff',
   },
 
   header: {
     fontSize: 30,
     fontWeight: 'bold',
     marginBottom: 20,
+    textAlign: 'center',
   },
 
   taskInput: {
@@ -49,23 +80,34 @@ const styles = StyleSheet.create({
     borderColor: '#d3d3d3',
     borderRadius: 10,
     padding: 12,
+    fontSize: 16,
   },
 
   addButton: {
-    marginTop: 12,
-    marginBottom: 20,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 6,
     backgroundColor: '#0066CC',
     padding: 12,
     borderRadius: 10,
-    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 20,
   },
 
   addButtonText: {
-    color: '#ffffff',
+    color: '#fff',
     fontWeight: 'bold',
+    fontSize: 16,
   },
 
   listContainer: {
+    gap: 12,
+  },
+
+  taskRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: 10,
   },
 
