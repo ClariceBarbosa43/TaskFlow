@@ -6,9 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   FlatList,
-  ToastAndroid,
-  Alert,
-  Platform,
 } from 'react-native';
 
 import { MaterialIcons } from '@expo/vector-icons';
@@ -25,18 +22,35 @@ export default function App() {
   const [task, setTask] = useState<string>('');
   const [tasks, setTasks] = useState<Task[]>([]);
 
+  // ✅ TOP TOAST STATE
+  const [toast, setToast] = useState<{
+    message: string;
+    visible: boolean;
+  }>({
+    message: '',
+    visible: false,
+  });
+
   useEffect(() => {
     loadTasks();
   }, []);
 
-  function showToast(message: string) {
-    if (Platform.OS === 'android') {
-      ToastAndroid.show(message, ToastAndroid.SHORT);
-    } else {
-      Alert.alert(message);
-    }
+  // ✅ CUSTOM TOP TOAST
+  function notify(message: string) {
+    setToast({
+      message,
+      visible: true,
+    });
+
+    setTimeout(() => {
+      setToast({
+        message: '',
+        visible: false,
+      });
+    }, 2000);
   }
 
+  // ✅ LOAD TASKS
   async function loadTasks() {
     const { data, error } = await supabase
       .from('tasks')
@@ -44,7 +58,7 @@ export default function App() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      showToast('Failed to load tasks');
+      notify('Failed to load tasks');
       console.log(error.message);
       return;
     }
@@ -52,9 +66,10 @@ export default function App() {
     setTasks((data as Task[]) || []);
   }
 
+  // ✅ ADD TASK
   async function addTask() {
     if (!task.trim()) {
-      showToast('Please enter a task');
+      notify('Please enter a task');
       return;
     }
 
@@ -66,15 +81,16 @@ export default function App() {
     ]);
 
     if (error) {
-      showToast('Failed to add task');
+      notify('Failed to add task');
       return;
     }
 
     setTask('');
-    showToast('Task added');
+    notify('Task added');
     loadTasks();
   }
 
+  // ✅ TOGGLE TASK
   async function toggleTask(item: Task) {
     const { error } = await supabase
       .from('tasks')
@@ -82,14 +98,15 @@ export default function App() {
       .eq('id', item.id);
 
     if (error) {
-      showToast('Update failed');
+      notify('Update failed');
       return;
     }
 
-    showToast(item.completed ? 'Marked as pending' : 'Task completed');
+    notify(item.completed ? 'Marked as pending' : 'Task completed');
     loadTasks();
   }
 
+  // ✅ DELETE TASK
   async function deleteTask(id: string) {
     const { error } = await supabase
       .from('tasks')
@@ -97,17 +114,24 @@ export default function App() {
       .eq('id', id);
 
     if (error) {
-      showToast('Delete failed');
+      notify('Delete failed');
       return;
     }
 
-    showToast('Task deleted');
+    notify('Task deleted');
     loadTasks();
   }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>TaskFlow</Text>
+
+      {/* 🔥 TOP TOAST UI */}
+      {toast.visible && (
+        <View style={styles.toastContainer}>
+          <Text style={styles.toastText}>{toast.message}</Text>
+        </View>
+      )}
 
       {/* INPUT */}
       <View style={styles.inputRow}>
@@ -134,7 +158,11 @@ export default function App() {
             onLongPress={() => deleteTask(item.id)}
           >
             <MaterialIcons
-              name={item.completed ? 'check-box' : 'check-box-outline-blank'}
+              name={
+                item.completed
+                  ? 'check-box'
+                  : 'check-box-outline-blank'
+              }
               size={22}
               color={item.completed ? '#2eba61' : '#666'}
             />
@@ -157,6 +185,7 @@ export default function App() {
   );
 }
 
+// ================= STYLES =================
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -215,5 +244,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 20,
     color: '#888',
+  },
+
+  // 🔥 TOAST STYLE (BIG + TOP)
+  toastContainer: {
+    position: 'absolute',
+    top: 50,
+    left: 20,
+    right: 20,
+    backgroundColor: '#2eba61',
+    padding: 15,
+    borderRadius: 10,
+    zIndex: 999,
+    elevation: 10,
+    alignItems: 'center',
+  },
+
+  toastText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
